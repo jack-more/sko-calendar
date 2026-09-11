@@ -297,3 +297,4 @@ textarea{min-height:76px;resize:vertical}
 .how .rot{margin-top:10px;line-height:1.55;color:var(--ink)}
 .vrow{display:flex;gap:8px;align-items:center}
 @media (max-width:820px){.pay-grid{grid-template-columns:1fr}.wk{min-width:0}}
+.demo-bar{background:var(--navy);color:#fff;font-size:12.5px;text-align:center;padding:8px 14px}

@@ -6,7 +6,7 @@
   "use strict";
 
   const API = "https://jackmorello.com/.netlify/functions/sko-cal";
-  const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has("local");
+  const LOCAL = new URLSearchParams(location.search).has("demo") || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has("local"));
   const POLL_MS = 25000;
 
   // ---------- reference data ----------
@@ -1075,6 +1075,12 @@
   renderPlaybook();
   renderAll();
   { const t0 = LS.get("skocal-tab", "cal"); const b = $(`.tab[data-tab="${t0}"]`); if (b && t0 !== "cal") b.click(); }
+  if (LOCAL && new URLSearchParams(location.search).has("demo")) {
+    S.name = S.name || "Demo"; S.pass = "demo";
+    const b = document.createElement("div"); b.className = "demo-bar";
+    b.textContent = "Demo: everything you add stays in this browser only. It's the reference build for the Lovable version.";
+    document.body.prepend(b);
+  }
   if (!S.pass || !S.name) { showGate(); }
   else { setSync(); refresh(); startPolling(); }
 })();
