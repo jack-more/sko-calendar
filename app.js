@@ -23,7 +23,7 @@
     { id: "SMS", code: "SMS" }, { id: "Site", code: "Site" }, { id: "Other", code: "Other" },
   ];
   const CODE = Object.fromEntries(CHANNELS.map((c) => [c.id, c.code]));
-  const ACCOUNTS = ["@skopeps", "@skocompound", "Ethan", "Andersen", "Hanna", "Dennis"];
+  const ACCOUNTS = ["@skocompound", "Ethan", "Andersen", "Hanna", "Dennis"];
   const chansOf = (e) => (Array.isArray(e.channels) && e.channels.length ? e.channels : e.channel ? [e.channel] : ["Other"]);
   const STATUSES = [
     { id: "idea", label: "Idea" },
@@ -32,7 +32,7 @@
     { id: "done", label: "Done" },
   ];
   const PLATFORMS = ["TikTok", "Meta", "Google", "OpenAI", "Taboola", "Snapchat", "Reddit", "X", "Other"];
-  const LIVE_ACCOUNTS = ["@skopeps", "Ethan", "Andersen", "Other creator"];
+  const LIVE_ACCOUNTS = ["SKO company account", "Ethan", "Andersen", "Other creator"];
   const DURATIONS = [30, 60, 90, 120, 150, 180, 240];
 
   // The 30-minute block. Minutes are offsets from the start of the block.
@@ -501,7 +501,7 @@
         ` : `
           <div class="full"><label style="margin-bottom:5px">Where it posts</label>
             <div class="seg" data-seg="chans">${CHANNELS.map((c) => `<button type="button" data-v="${esc(c.id)}" class="${d.channels.includes(c.id) ? "on" : ""}">${esc(c.id)}</button>`).join("")}</div></div>
-          <label>Account<input name="account" list="acctList" value="${esc(d.account || "")}" placeholder="@skopeps"><datalist id="acctList">${ACCOUNTS.map((a) => `<option value="${esc(a)}">`).join("")}</datalist></label>
+          <label>Account<input name="account" list="acctList" value="${esc(d.account || "")}" placeholder="@skocompound"><datalist id="acctList">${ACCOUNTS.map((a) => `<option value="${esc(a)}">`).join("")}</datalist></label>
         `}
         <label>Owner<input name="owner" value="${esc(d.owner)}" maxlength="40"></label>
         <div class="full"><label style="margin-bottom:5px">Status</label>${seg("status", STATUSES, d.status)}</div>

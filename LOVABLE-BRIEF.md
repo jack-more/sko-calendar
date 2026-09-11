@@ -19,7 +19,7 @@ Source: https://github.com/jack-more/sko-calendar (`index.html`, `app.css`, `app
 - **Realtime:** everyone sees a change within seconds of it being saved. Stamp every row with `created_by` / `updated_by` (the member's name) and timestamps. Show "Last edited by X, time" in editors.
 - **Files:** a private storage bucket `content`. Uploads go straight from the browser to storage, resumable, with a progress bar; set the bucket limit to at least 1 GB per file (videos). Downloads use signed URLs. Any member can download any file.
 - **Tables:**
-  - `entries`: id, type (`post` | `live` | `email` | `promo` | `other`), title, date, time, channels text[] (TikTok, Instagram, YouTube, Facebook, X, Email, SMS, Site, Other), account (e.g. @skopeps), owner, stage (`draft` | `ready` | `posted`), link, notes (caption), live jsonb (see LIVE below).
+  - `entries`: id, type (`post` | `live` | `email` | `promo` | `other`), title, date, time, channels text[] (TikTok, Instagram, YouTube, Facebook, X, Email, SMS, Site, Other), account (e.g. @skocompound), owner, stage (`draft` | `ready` | `posted`), link, notes (caption), live jsonb (see LIVE below).
   - `entry_files`: id, entry_id, storage_path, name, size, mime, uploaded_by, created_at. Deleting an entry deletes its files.
   - `campaigns`: id, platform (TikTok, Meta, Google, OpenAI, Taboola, Snapchat, Reddit, X, Other), name, ad_account, objective, start, end, budget_type (`daily` | `lifetime`), budget (current), status (`live` | `paused` | `ended`), destination_url, code, owner, notes.
   - `campaign_events`: id, campaign_id, date, kind (`launch` | `budget` | `pause` | `resume` | `end`), amount, from_amount, note, by. A launch event is written when a campaign is created; changing the budget writes a `budget` event; changing status writes the matching event.
@@ -41,11 +41,11 @@ Source: https://github.com/jack-more/sko-calendar (`index.html`, `app.css`, `app
 Title, target date, where it will post (optional), owner, **raw files** (upload several), "What it still needs" notes. Nothing else is required. Button on an open draft: **Mark ready**, which switches it to the ready form below with everything carried over.
 
 **Ready to go live** (stage `ready`): the thing that gets posted.
-Title, date, **time**, **where it posts** (multi-select channel chips, at least one), **account** (suggest @skopeps, @skocompound, Ethan, Andersen, Hanna, Dennis), owner, **final file** (at least one), **caption** (hook, caption, hashtags, CTA), link. All bold fields are required to save. Raw files from the draft stay attached under "Raw files". Button: **Mark posted**, which asks for the live post link and sets stage `posted`.
+Title, date, **time**, **where it posts** (multi-select channel chips, at least one), **account** (suggest @skocompound, Ethan, Andersen, Hanna, Dennis), owner, **final file** (at least one), **caption** (hook, caption, hashtags, CTA), link. All bold fields are required to save. Raw files from the draft stay attached under "Raw files". Button: **Mark posted**, which asks for the live post link and sets stage `posted`.
 
 Both forms: type selector (Content, LIVE, Email & SMS, Promo / drop, Other), file rows show name, size, uploader, Download, Remove; Save / Cancel / Delete; cancelling a new entry deletes files uploaded into it.
 
-**LIVE entries** replace channels with: account (@skopeps, Ethan, Andersen, Other creator), length (30 min to 4 hr), hosts, live code. Then a **run of show**: one block per 30 minutes with its clock times (from the start time), a focus select (Best sellers · Restock and new · Bundles and pairs · Receipts and questions, rotating by default), feature, second feature, orders (a number logged after the block), notes, and a checklist of the eight beats below with each beat's clock time. Show "N orders logged" across blocks.
+**LIVE entries** replace channels with: account (SKO company account, Ethan, Andersen, Other creator), length (30 min to 4 hr), hosts, live code. Then a **run of show**: one block per 30 minutes with its clock times (from the start time), a focus select (Best sellers · Restock and new · Bundles and pairs · Receipts and questions, rotating by default), feature, second feature, orders (a number logged after the block), notes, and a checklist of the eight beats below with each beat's clock time. Show "N orders logged" across blocks.
 
 ## 5. Library and LIVE playbook
 
