@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SKO Marketing Calendar</title>
+<link rel="icon" type="image/png" href="img/mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="./"><img src="img/lockup-navy.png" alt="SKO Compounds"></a>
+    <nav class="tabs" aria-label="Views">
+      <button class="tab on" data-tab="cal">Calendar</button>
+      <button class="tab" data-tab="lib">Library</button>
+      <button class="tab" data-tab="live">LIVE playbook</button>
+    </nav>
+    <div class="who">
+      <span class="sync" id="sync" aria-live="polite"></span>
+      <button class="link" id="whoBtn" title="Change your name"></button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- CALENDAR -->
+  <section id="view-cal" class="wrap view">
+    <div class="month-head">
+      <div class="mh-left">
+        <h1 class="disp" id="monthTitle"></h1>
+        <div class="mnav">
+          <button class="icon" id="prevM" aria-label="Previous month">&#8249;</button>
+          <button class="ghost sm" id="todayBtn">Today</button>
+          <button class="icon" id="nextM" aria-label="Next month">&#8250;</button>
+        </div>
+      </div>
+      <div class="mh-right">
+        <div class="filters" id="filters" role="group" aria-label="Show"></div>
+        <button class="btn" id="newEntry">+ Add to calendar</button>
+      </div>
+    </div>
+
+    <div class="dow" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+    <div class="grid" id="grid" role="grid"></div>
+
+    <!-- PAID -->
+    <section class="paid" aria-labelledby="paidTitle">
+      <div class="paid-head">
+        <div>
+          <h2 class="disp" id="paidTitle">Currently running paid</h2>
+          <p class="sub" id="paidSum"></p>
+        </div>
+        <button class="btn" id="newCamp">+ Add campaign</button>
+      </div>
+      <div class="table-wrap">
+        <table class="ptable" id="liveTable">
+          <thead><tr>
+            <th>Platform</th><th>Campaign</th><th>Launched</th><th class="num">Budget</th><th>Last change</th><th>Goes to</th><th>Owner</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="liveEmpty" hidden>No paid campaigns running. Add one and its launch shows on the calendar.</p>
+      <details class="more" id="otherCamps">
+        <summary>Scheduled, paused and ended <span id="otherCount"></span></summary>
+        <div class="table-wrap">
+          <table class="ptable"><thead><tr>
+            <th>Platform</th><th>Campaign</th><th>Dates</th><th class="num">Budget</th><th>Owner</th><th>Status</th><th></th>
+          </tr></thead><tbody id="otherBody"></tbody></table>
+        </div>
+      </details>
+    </section>
+  </section>
+
+  <!-- LIBRARY -->
+  <section id="view-lib" class="wrap view" hidden>
+    <div class="month-head">
+      <div class="mh-left"><h1 class="disp">Content library</h1></div>
+      <div class="mh-right lib-ctl">
+        <input type="search" id="libQ" placeholder="Search titles, captions, accounts" aria-label="Search content">
+        <select id="libCh" aria-label="Channel"><option value="">Every channel</option></select>
+        <select id="libAcct" aria-label="Account"><option value="">Every account</option></select>
+        <label class="chk"><input type="checkbox" id="libFiles"> Has files</label>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="ptable lib">
+        <thead><tr><th>Date</th><th>Where</th><th>Account</th><th>Content</th><th>Status</th><th>Files</th><th>Owner</th></tr></thead>
+        <tbody id="libBody"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="libEmpty" hidden>Nothing matches.</p>
+  </section>
+
+  <!-- LIVE PLAYBOOK -->
+  <section id="view-live" class="wrap view" hidden>
+    <div class="pb-head">
+      <h1 class="disp">TikTok LIVE, every 30 minutes</h1>
+      <p class="lede">The same eight beats every half hour. People join partway through, so every block restarts the pitch for them, and every block has one deal moment and one proof moment. Log orders at the end of each block in the session on the calendar, so after a few weeks you can see which blocks sell.</p>
+    </div>
+    <div class="pb-grid">
+      <ol class="beats" id="beats"></ol>
+      <aside class="pb-side">
+        <div class="card">
+          <h3>Longer than 30 minutes</h3>
+          <p>Rotate the block's focus so the second half hour isn't a rerun.</p>
+          <ol class="rot" id="rotation"></ol>
+        </div>
+        <div class="card">
+          <h3>Who does what</h3>
+          <ul class="plain">
+            <li><b>Host</b> talks to camera and holds the product.</li>
+            <li><b>Second host</b> reads chat, packs orders on camera, catches what the host misses.</li>
+            <li><b>Producer, off camera</b> pins the product at 0:00, 12:00 and 17:00, notes the best comment for the next Receipts beat, logs orders per block, clips moments for posts.</li>
+          </ul>
+        </div>
+        <div class="card rules">
+          <h3>Say on air</h3>
+          <ul class="plain" id="saySo"></ul>
+          <h3>Never say</h3>
+          <ul class="plain no" id="neverSay"></ul>
+        </div>
+        <div class="card muted">
+          <h3>If Billy approves the loyalty programme</h3>
+          <p>Double points while live, the live stamp card, and the weekly Full Box draw read out in the last block. None of it is live yet, so don't promise it on air.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- day drawer -->
+<aside class="drawer" id="drawer" hidden aria-label="Day">
+  <div class="drawer-in">
+    <div class="drawer-head">
+      <h3 id="drawerTitle"></h3>
+      <button class="icon" data-close aria-label="Close">&times;</button>
+    </div>
+    <div id="drawerList"></div>
+    <button class="btn wide" id="drawerAdd">+ Add to this day</button>
+  </div>
+</aside>
+
+<!-- modal -->
+<div class="scrim" id="scrim" hidden></div>
+<dialog class="modal" id="modal" aria-labelledby="modalTitle"></dialog>
+
+<!-- gate -->
+<div class="gate" id="gate" hidden>
+  <form class="gate-card" id="gateForm">
+    <img src="img/lockup-navy.png" alt="SKO Compounds">
+    <h2>Marketing calendar</h2>
+    <label>Your name<input name="name" autocomplete="name" required maxlength="40"></label>
+    <label>Team passcode<input name="pass" type="password" required autocomplete="current-password"></label>
+    <p class="err" id="gateErr" hidden></p>
+    <button class="btn wide" type="submit">Open calendar</button>
+  </form>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
