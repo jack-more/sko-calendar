@@ -20,6 +20,7 @@
       <button class="tab on" data-tab="cal">Calendar</button>
       <button class="tab" data-tab="lib">Library</button>
       <button class="tab" data-tab="live">LIVE playbook</button>
+      <button class="tab" data-tab="pay">Creator payouts</button>
     </nav>
     <div class="who">
       <span class="sync" id="sync" aria-live="polite"></span>
@@ -96,6 +97,60 @@
       </table>
     </div>
     <p class="empty" id="libEmpty" hidden>Nothing matches.</p>
+  </section>
+
+  <!-- CREATOR PAYOUTS -->
+  <section id="view-pay" class="wrap view" hidden>
+    <div class="month-head">
+      <div class="mh-left">
+        <h1 class="disp">Creator payouts</h1>
+        <div class="mnav">
+          <button class="icon" id="prevW" aria-label="Previous week">&#8249;</button>
+          <span class="wk" id="weekLbl"></span>
+          <button class="icon" id="nextW" aria-label="Next week">&#8250;</button>
+        </div>
+      </div>
+      <div class="mh-right">
+        <label class="btn upl-btn"><input type="file" id="importFile" accept=".csv,.xlsx,.xls,text/csv">Import TikTok report</label>
+      </div>
+    </div>
+    <p class="sub" id="paySrc"></p>
+
+    <div class="table-wrap">
+      <table class="ptable pay">
+        <thead><tr><th>Creator</th><th class="num">Conversions</th><th class="num">Rate</th><th class="num">Payout</th><th>Videos</th><th>Status</th><th></th></tr></thead>
+        <tbody id="payBody"></tbody>
+        <tfoot id="payFoot"></tfoot>
+      </table>
+    </div>
+
+    <section class="unassigned" id="unassigned" hidden>
+      <h3>Videos with conversions that aren't matched to a creator</h3>
+      <p class="sub">Pick who made each one. It's remembered for every future week.</p>
+      <div class="table-wrap"><table class="ptable"><thead><tr><th>Video or ad</th><th class="num">Conversions</th><th>Belongs to</th></tr></thead><tbody id="unBody"></tbody></table></div>
+    </section>
+
+    <div class="pay-grid">
+      <section>
+        <div class="paid-head"><h2 class="disp">Creators</h2><button class="btn" id="newCreator">+ Add creator</button></div>
+        <div class="table-wrap"><table class="ptable"><thead><tr><th>Creator</th><th>Matches</th><th class="num">Per conversion</th><th class="num">Weekly flat</th><th></th></tr></thead><tbody id="crBody"></tbody></table></div>
+        <p class="sub" id="exclNote"></p>
+      </section>
+      <section>
+        <div class="paid-head"><h2 class="disp">Past weeks</h2></div>
+        <div class="table-wrap"><table class="ptable"><thead><tr><th>Week</th><th class="num">Conversions</th><th class="num">Payout</th><th>Status</th></tr></thead><tbody id="histBody"></tbody></table></div>
+      </section>
+    </div>
+
+    <details class="more how">
+      <summary>How the count works</summary>
+      <ol class="rot">
+        <li>In TikTok Ads Manager, open Reporting and run a custom report for the week (Monday to Sunday) with <b>Video material ID</b>, <b>Ad name</b> and <b>Conversions</b> (or Purchases). Export it as CSV or XLSX.</li>
+        <li>Import it here on that week. Each row is matched to a creator by a video ID you've assigned, or by the creator's name tag in the video or ad name.</li>
+        <li>Conversions are the purchases TikTok attributes to each video under the ad account's attribution settings.</li>
+        <li>So matching is automatic: name every creator's file with their tag before it goes into the Creative Library (HANNA_hook1_9x16.mp4), and keep one creator per ad. An ad that mixes two creators can only be split with the per-video export.</li>
+      </ol>
+    </details>
   </section>
 
   <!-- LIVE PLAYBOOK -->

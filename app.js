@@ -111,8 +111,9 @@
 
   // ---------- state ----------
   const now = new Date();
+  const KEY = { entry: "entries", campaign: "campaigns", creator: "creators", payout: "payouts" };
   const S = {
-    entries: [], campaigns: [],
+    entries: [], campaigns: [], creators: [], payouts: [],
     month: new Date(now.getFullYear(), now.getMonth(), 1),
     off: new Set(LS.get("skocal-off", [])),
     name: LS.get("skocal-name", ""), pass: LS.get("skocal-pass", ""),
@@ -125,7 +126,7 @@
   const LOCAL_FILES = new Map();
   const store = {
     async load() {
-      if (LOCAL) return LS.get("skocal-local", { entries: [], campaigns: [] });
+      if (LOCAL) return { entries: [], campaigns: [], creators: [], payouts: [], ...LS.get("skocal-local", {}) };
       const r = await fetch(API, { headers: { "x-team-pass": S.pass }, cache: "no-store" });
       if (r.status === 401) throw Object.assign(new Error("bad_pass"), { code: "bad_pass" });
       if (!r.ok) throw new Error("http " + r.status);
@@ -133,7 +134,7 @@
     },
     async put(kind, item) {
       if (LOCAL) {
-        const db = LS.get("skocal-local", { entries: [], campaigns: [] }); const k = kind === "entry" ? "entries" : "campaigns";
+        const db = { entries: [], campaigns: [], creators: [], payouts: [], ...LS.get("skocal-local", {}) }; const k = KEY[kind];
         const saved = { ...item, updatedAt: new Date().toISOString() };
         db[k] = db[k].filter((x) => x.id !== item.id).concat(saved); LS.set("skocal-local", db); return saved;
       }
@@ -158,7 +159,7 @@
     },
     async del(kind, id) {
       if (LOCAL) {
-        const db = LS.get("skocal-local", { entries: [], campaigns: [] }); const k = kind === "entry" ? "entries" : "campaigns";
+        const db = { entries: [], campaigns: [], creators: [], payouts: [], ...LS.get("skocal-local", {}) }; const k = KEY[kind];
         db[k] = db[k].filter((x) => x.id !== id); LS.set("skocal-local", db); return;
       }
       const r = await fetch(API, { method: "POST", headers: { "content-type": "application/json", "x-team-pass": S.pass }, body: JSON.stringify({ op: "del", kind, id }) });
@@ -176,7 +177,7 @@
   async function refresh() {
     try {
       const d = await store.load();
-      S.entries = d.entries || []; S.campaigns = d.campaigns || [];
+      S.entries = d.entries || []; S.campaigns = d.campaigns || []; S.creators = d.creators || []; S.payouts = d.payouts || [];
       S.synced = new Date(); S.failing = false;
       renderAll();
     } catch (e) {
@@ -187,7 +188,7 @@
   }
 
   async function save(kind, item) {
-    const list = kind === "entry" ? S.entries : S.campaigns;
+    const list = S[KEY[kind]];
     const prev = list.find((x) => x.id === item.id);
     item.updatedBy = S.name;
     if (!prev) item.createdBy = S.name;
@@ -249,7 +250,7 @@
   }
 
   async function remove(kind, id) {
-    const key = kind === "entry" ? "entries" : "campaigns";
+    const key = KEY[kind];
     if (kind === "entry") { const e = S.entries.find((x) => x.id === id); (e && e.assets || []).forEach((a) => store.delFile(a.id, a.chunks).catch(() => {})); }
     const prev = S[key];
     S[key] = prev.filter((x) => x.id !== id); renderAll();
@@ -718,6 +719,251 @@
   }
   ["#libQ", "#libCh", "#libAcct", "#libFiles"].forEach((s) => $(s).addEventListener("input", renderLibrary));
 
+  // ---------- creator payouts ----------
+  // Weekly count of TikTok-attributed conversions per UGC creator, from the per-video
+  // report someone imports. A row belongs to a creator by an assigned video ID, or by
+  // exactly one creator's name tag appearing in the video or ad name.
+  const IGNORE_ID = "not-paid-list";
+  const mondayOf = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  S.week = (() => { const m = mondayOf(new Date()); m.setDate(m.getDate() - 7); return m; })();
+  const weekId = (m) => "wk-" + ymd(m);
+  const weekLabel = (m) => { const e = new Date(m); e.setDate(e.getDate() + 6); return `${fmtDay(ymd(m), { month: "short", day: "numeric" })} to ${fmtDay(ymd(e), { month: "short", day: "numeric", year: "numeric" })}`; };
+  const creatorList = () => S.creators.filter((c) => c.id !== IGNORE_ID).sort((a, b) => a.name.localeCompare(b.name));
+  const ignoreRec = () => S.creators.find((c) => c.id === IGNORE_ID) || { id: IGNORE_ID, name: "Not paid", tags: [], videos: [] };
+  const num = (v) => (v === "" || v == null || isNaN(v) ? 0 : Number(v));
+  const money2 = (n) => "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function matchRow(r) {
+    const all = [...creatorList(), ignoreRec()];
+    for (const c of all) if ((c.videos || []).includes(r.key)) return c.id;
+    const hay = `${r.key} ${r.name}`.toUpperCase();
+    const hits = all.filter((c) => (c.tags || []).some((t) => t && hay.includes(t.toUpperCase())));
+    return hits.length === 1 ? hits[0].id : null;
+  }
+
+  function weekCalc(rec) {
+    const per = {};
+    creatorList().forEach((c) => (per[c.id] = { conv: 0, videos: 0, auto: 0 }));
+    const un = [];
+    for (const r of (rec && rec.rows) || []) {
+      const cid = matchRow(r);
+      if (cid === IGNORE_ID) continue;
+      if (cid && per[cid]) { per[cid].conv += r.conv; per[cid].auto += r.conv; per[cid].videos++; }
+      else if (!cid) un.push(r);
+    }
+    for (const [cid, v] of Object.entries((rec && rec.override) || {})) if (per[cid] && v !== "" && v != null) per[cid].conv = Number(v);
+    return { per, un: un.sort((a, b) => b.conv - a.conv) };
+  }
+  const amountFor = (c, conv) => conv * num(c.rate) + num(c.flat);
+
+  function renderPayouts() {
+    if (!$("#view-pay")) return;
+    $("#weekLbl").textContent = weekLabel(S.week);
+    const rec = S.payouts.find((p) => p.id === weekId(S.week));
+    const { per, un } = weekCalc(rec);
+    $("#paySrc").innerHTML = rec
+      ? `From <b>${esc(rec.file)}</b>, imported by ${esc(rec.importedBy || "someone")} ${new Date(rec.importedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}. ${rec.rows.length} videos with conversions.`
+      : "No TikTok report imported for this week yet.";
+    let tConv = 0, tAmt = 0;
+    $("#payBody").innerHTML = creatorList().map((c) => {
+      const p = rec && rec.paid && rec.paid[c.id];
+      const conv = p ? p.conv : per[c.id].conv;
+      const amt = p ? p.amount : amountFor(c, conv);
+      tConv += conv; tAmt += amt;
+      const adj = rec && rec.override && rec.override[c.id] !== undefined && rec.override[c.id] !== "";
+      const rate = p ? `${money2(p.rate)}${p.flat ? ` + ${money2(p.flat)}` : ""}` : `${num(c.rate) ? money2(c.rate) : '<span class="warn">Set rate</span>'}${num(c.flat) ? ` + ${money2(c.flat)}` : ""}`;
+      return `<tr>
+        <td><div class="nm">${esc(c.name)}</div><div class="s2">${esc(c.handle || "")}</div></td>
+        <td class="num"><b>${conv}</b>${adj ? `<div class="s2">adjusted from ${per[c.id].auto}</div>` : ""}</td>
+        <td class="num">${rate}</td>
+        <td class="num"><b>${money2(amt)}</b></td>
+        <td>${per[c.id].videos}</td>
+        <td>${p ? `<span class="paidtag">Paid</span><div class="s2">${fmtShort(p.at.slice(0, 10))} · ${esc(p.by || "")}</div>` : rec ? "Unpaid" : "No report"}</td>
+        <td><div class="rowact">${rec && !p ? `<button data-adjust="${esc(c.id)}">Adjust</button><button data-markpaid="${esc(c.id)}">Mark paid</button>` : ""}${p ? `<button data-unpay="${esc(c.id)}">Undo</button>` : ""}</div></td></tr>`;
+    }).join("") || `<tr><td colspan="7" class="s2">Add a creator to start counting.</td></tr>`;
+    $("#payFoot").innerHTML = creatorList().length ? `<tr><td>Total</td><td class="num"><b>${tConv}</b></td><td></td><td class="num"><b>${money2(tAmt)}</b></td><td colspan="3"></td></tr>` : "";
+
+    $("#unassigned").hidden = !un.length;
+    const opts = `<option value="">Choose</option>${creatorList().map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}<option value="${IGNORE_ID}">Not a paid creator</option>`;
+    $("#unBody").innerHTML = un.map((r) => `<tr><td><div class="nm clip">${esc(r.name || r.key)}</div>${r.name && r.key !== r.name ? `<div class="s2">${esc(r.key)}</div>` : ""}</td><td class="num"><b>${r.conv}</b></td><td><select class="status" data-assign="${esc(r.key)}">${opts}</select></td></tr>`).join("");
+
+    $("#crBody").innerHTML = creatorList().map((c) => `<tr>
+      <td><div class="nm">${esc(c.name)}</div><div class="s2">${esc(c.handle || "")}</div></td>
+      <td>${(c.tags || []).map((t) => `<span class="plat">${esc(t)}</span>`).join(" ")}${(c.videos || []).length ? `<div class="s2">+ ${c.videos.length} assigned video${c.videos.length > 1 ? "s" : ""}</div>` : ""}</td>
+      <td class="num">${num(c.rate) ? money2(c.rate) : '<span class="warn">Not set</span>'}</td>
+      <td class="num">${num(c.flat) ? money2(c.flat) : "—"}</td>
+      <td><div class="rowact"><button data-creator="${esc(c.id)}">Edit</button></div></td></tr>`).join("");
+    const ig = ignoreRec();
+    $("#exclNote").innerHTML = `Never counted: ${(ig.tags || []).map((t) => `<b>${esc(t)}</b>`).join(", ") || "nobody yet"}${(ig.videos || []).length ? ` and ${ig.videos.length} assigned video${ig.videos.length > 1 ? "s" : ""}` : ""}. <button class="link" data-creator="${IGNORE_ID}">Edit</button>`;
+
+    $("#histBody").innerHTML = S.payouts.slice().sort((a, b) => b.week.localeCompare(a.week)).map((p) => {
+      const { per: pp } = weekCalc(p);
+      let conv = 0, amt = 0, unpaid = 0;
+      creatorList().forEach((c) => { const s = p.paid && p.paid[c.id]; const cv = s ? s.conv : pp[c.id].conv; conv += cv; amt += s ? s.amount : amountFor(c, cv); if (!s && cv > 0) unpaid++; });
+      return `<tr class="lrow" data-week="${esc(p.week)}"><td>${esc(weekLabel(parseYmd(p.week)))}</td><td class="num">${conv}</td><td class="num">${money2(amt)}</td><td>${unpaid ? `${unpaid} unpaid` : '<span class="paidtag">All paid</span>'}</td></tr>`;
+    }).join("") || `<tr><td colspan="4" class="s2">No weeks imported yet.</td></tr>`;
+  }
+
+  // ---- file parsing ----
+  function parseCSV(text) {
+    text = text.replace(/^﻿/, "");
+    const delim = (text.split("\n")[0].match(/\t/g) || []).length > (text.split("\n")[0].match(/,/g) || []).length ? "\t" : ",";
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === delim) { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter((r) => r.some((c) => String(c).trim()));
+  }
+  function loadXLSX() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+      s.onload = () => res(window.XLSX); s.onerror = () => rej(new Error("xlsx"));
+      document.head.append(s);
+    });
+  }
+  async function readRows(file) {
+    if (/\.csv$|\.txt$/i.test(file.name) || file.type === "text/csv") return parseCSV(await file.text());
+    const X = await loadXLSX();
+    const wb = X.read(await file.arrayBuffer(), { type: "array" });
+    return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: "" });
+  }
+  function reportRows(rows) {
+    const idRe = /material id|video id|ad name|video name|material name|^name$/i;
+    const cvRe = /conversion|purchase|complete payment|^results?$/i;
+    const hi = rows.findIndex((r) => r.some((c) => idRe.test(String(c).trim())) && r.some((c) => cvRe.test(String(c).trim())));
+    if (hi < 0) throw new Error("I couldn't find a video or ad column and a conversions column in that file.");
+    const H = rows[hi].map((h) => String(h).trim());
+    const find = (res) => { for (const re of res) { const i = H.findIndex((h) => re.test(h)); if (i >= 0) return i; } return -1; };
+    const iVid = find([/^video material id$/i, /material id/i, /^video id$/i]);
+    const iAd = find([/^ad name$/i]);
+    const iName = find([/video name|material name|creative name/i, /^name$/i]);
+    const bad = /rate|cost|value|roas|per |cvr|\(%\)/i;
+    const iConv = (() => {
+      for (const re of [/^conversions$/i, /^purchases?$/i, /^complete payment$/i, /^results?$/i]) { const i = H.findIndex((h) => re.test(h)); if (i >= 0) return i; }
+      return H.findIndex((h) => /conversion|purchase/i.test(h) && !bad.test(h));
+    })();
+    if (iConv < 0) throw new Error("There's no conversions column in that file. Add Conversions or Purchases to the report.");
+    const out = new Map();
+    for (const r of rows.slice(hi + 1)) {
+      const vid = iVid >= 0 ? String(r[iVid] ?? "").trim() : "";
+      const ad = iAd >= 0 ? String(r[iAd] ?? "").trim() : "";
+      const nm = iName >= 0 && iName !== iAd ? String(r[iName] ?? "").trim() : "";
+      const first = vid || nm || ad;
+      if (!first || /^(total|-)/i.test(first)) continue;
+      const conv = Number(String(r[iConv] ?? "").replace(/[^0-9.\-]/g, "")) || 0;
+      const key = (vid || nm || ad).slice(0, 90);
+      const name = [nm, ad].filter(Boolean).join(" · ").slice(0, 110);
+      const prev = out.get(key);
+      if (prev) prev.conv += conv; else out.set(key, { key, name, conv });
+    }
+    return [...out.values()].filter((r) => r.conv > 0).sort((a, b) => b.conv - a.conv).slice(0, 220);
+  }
+
+  $("#importFile").addEventListener("change", async (e) => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file) return;
+    const id = weekId(S.week);
+    const prev = S.payouts.find((p) => p.id === id);
+    if (prev && Object.keys(prev.paid || {}).length && !confirm("Some creators are already marked paid for this week. Replace the report? Paid amounts stay as they were.")) return;
+    try {
+      const rows = reportRows(await readRows(file));
+      const rec = { id, week: ymd(S.week), file: file.name, importedBy: S.name, importedAt: new Date().toISOString(), rows, override: (prev && prev.override) || {}, paid: (prev && prev.paid) || {} };
+      if (await save("payout", rec)) toast(`Imported ${rows.length} videos with conversions for ${weekLabel(S.week)}.`);
+    } catch (err) { toast(err.message && !/^(xlsx|http)/.test(err.message) ? err.message : "Couldn't read that file."); }
+  });
+
+  function editCreator(c0) {
+    const isIgnore = c0 && c0.id === IGNORE_ID;
+    const c = c0 ? JSON.parse(JSON.stringify(c0)) : { id: uid(), name: "", handle: "", tags: [], rate: "", flat: "", videos: [], notes: "" };
+    openModal(`<form method="dialog" novalidate>
+      <div class="m-head"><h3 id="modalTitle">${isIgnore ? "Never counted" : c0 ? "Edit creator" : "Add creator"}</h3><button type="button" class="icon" data-x aria-label="Close">&times;</button></div>
+      <div class="m-body">
+        ${isIgnore ? "" : `<label>Name<input name="name" value="${esc(c.name)}" required maxlength="40"></label>
+        <label>TikTok handle<input name="handle" value="${esc(c.handle)}" placeholder="@handle"></label>`}
+        <label class="full">${isIgnore ? "Name tags that are never counted" : "Name tags"} <span class="hint">Comma separated. A video or ad whose name contains one of these ${isIgnore ? "is skipped" : "counts for this creator"}.</span><input name="tags" value="${esc((c.tags || []).join(", "))}" placeholder="${isIgnore ? "ETHAN, SINGOD" : "HANNA"}"></label>
+        ${isIgnore ? "" : `<label>Per conversion ($)<input name="rate" type="number" min="0" step="0.01" value="${esc(c.rate)}"></label>
+        <label>Weekly flat ($) <span class="hint">optional</span><input name="flat" type="number" min="0" step="0.01" value="${esc(c.flat)}"></label>
+        <label class="full">Notes<textarea name="notes" placeholder="Terms, payment method, contact">${esc(c.notes || "")}</textarea></label>`}
+        ${(c.videos || []).length ? `<div class="full"><label>Assigned videos</label><ul class="plain" style="margin-top:6px">${c.videos.map((v) => `<li class="vrow"><span class="clip">${esc(v)}</span> <button type="button" class="link" data-unv="${esc(v)}">Remove</button></li>`).join("")}</ul></div>` : ""}
+      </div>
+      <div class="m-foot">${metaLine(c0)}<div class="r">${c0 && !isIgnore ? '<button type="button" class="btn danger" data-del>Delete</button>' : ""}<button type="button" class="ghost" data-x>Cancel</button><button type="submit" class="btn">Save</button></div></div>
+    </form>`, (m) => {
+      const f = m.querySelector("form");
+      m.querySelectorAll("[data-x]").forEach((b) => (b.onclick = closeModal));
+      m.querySelectorAll("[data-unv]").forEach((b) => (b.onclick = () => { c.videos = c.videos.filter((v) => v !== b.dataset.unv); b.closest("li").remove(); }));
+      const del = m.querySelector("[data-del]");
+      if (del) del.onclick = async () => { if (confirm(`Delete ${c.name}? Past weeks keep what was marked paid.`)) { closeModal(); await remove("creator", c.id); } };
+      f.onsubmit = async (e) => {
+        e.preventDefault();
+        const g = (n) => (f.elements[n] ? f.elements[n].value.trim() : "");
+        if (!isIgnore) { c.name = g("name"); c.handle = g("handle"); c.rate = g("rate"); c.flat = g("flat"); c.notes = g("notes"); if (!c.name) { f.elements.name.reportValidity(); return; } }
+        else c.name = "Not paid";
+        c.tags = g("tags").split(",").map((t) => t.trim()).filter(Boolean);
+        closeModal(); await save("creator", c);
+      };
+    });
+  }
+
+  function adjustWeek(cid) {
+    const rec = S.payouts.find((p) => p.id === weekId(S.week)); const c = S.creators.find((x) => x.id === cid);
+    if (!rec || !c) return;
+    const auto = weekCalc({ ...rec, override: {} }).per[cid].conv;
+    openModal(`<form method="dialog" novalidate>
+      <div class="m-head"><h3 id="modalTitle">Adjust ${esc(c.name)}, ${esc(weekLabel(S.week))}</h3><button type="button" class="icon" data-x aria-label="Close">&times;</button></div>
+      <div class="m-body"><label>Counted from the report<input value="${auto}" disabled></label>
+        <label>Pay on this many<input name="v" type="number" min="0" step="1" value="${esc(rec.override && rec.override[cid] !== undefined ? rec.override[cid] : auto)}"></label>
+        <label class="full">Why<input name="why" value="${esc((rec.why && rec.why[cid]) || "")}" placeholder="e.g. refund on 2 orders"></label></div>
+      <div class="m-foot"><button type="button" class="link" data-clear>Use the report's count</button><div class="r"><button type="button" class="ghost" data-x>Cancel</button><button type="submit" class="btn">Save</button></div></div></form>`, (m) => {
+      const f = m.querySelector("form");
+      m.querySelectorAll("[data-x]").forEach((b) => (b.onclick = closeModal));
+      const put = async (v, why) => { const r = JSON.parse(JSON.stringify(rec)); r.override = r.override || {}; r.why = r.why || {}; if (v === null) { delete r.override[cid]; delete r.why[cid]; } else { r.override[cid] = v; r.why[cid] = why; } closeModal(); await save("payout", r); };
+      m.querySelector("[data-clear]").onclick = () => put(null);
+      f.onsubmit = (e) => { e.preventDefault(); const v = f.elements.v.value; if (v === "" || isNaN(v)) return; put(Number(v), f.elements.why.value.trim()); };
+    });
+  }
+
+  async function markPaid(cid, undo) {
+    const rec0 = S.payouts.find((p) => p.id === weekId(S.week)); const c = S.creators.find((x) => x.id === cid);
+    if (!rec0 || !c) return;
+    const rec = JSON.parse(JSON.stringify(rec0)); rec.paid = rec.paid || {};
+    if (undo) { if (!confirm(`Undo paid for ${c.name}?`)) return; delete rec.paid[cid]; }
+    else {
+      const conv = weekCalc(rec).per[cid].conv, amount = amountFor(c, conv);
+      if (!num(c.rate) && !num(c.flat)) { toast(`Set ${c.name}'s rate first.`); return; }
+      if (!confirm(`Mark ${c.name} paid ${money2(amount)} for ${conv} conversion${conv === 1 ? "" : "s"}?`)) return;
+      rec.paid[cid] = { conv, rate: num(c.rate), flat: num(c.flat), amount, at: new Date().toISOString(), by: S.name };
+    }
+    await save("payout", rec);
+  }
+
+  async function assignVideo(key, cid) {
+    const c0 = cid === IGNORE_ID ? ignoreRec() : S.creators.find((x) => x.id === cid); if (!c0) return;
+    const c = JSON.parse(JSON.stringify(c0)); c.videos = [...new Set([...(c.videos || []), key])];
+    S.creators.forEach((o) => { if (o.id !== c.id && (o.videos || []).includes(key)) { const oc = JSON.parse(JSON.stringify(o)); oc.videos = oc.videos.filter((v) => v !== key); save("creator", oc); } });
+    await save("creator", c);
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    const cr = t.closest("[data-creator]"); if (cr) { const c = S.creators.find((x) => x.id === cr.dataset.creator) || (cr.dataset.creator === IGNORE_ID ? ignoreRec() : null); c && editCreator(c.id === IGNORE_ID && !S.creators.find((x) => x.id === IGNORE_ID) ? { ...c } : c); return; }
+    const aj = t.closest("[data-adjust]"); if (aj) { adjustWeek(aj.dataset.adjust); return; }
+    const mp = t.closest("[data-markpaid]"); if (mp) { markPaid(mp.dataset.markpaid); return; }
+    const up = t.closest("[data-unpay]"); if (up) { markPaid(up.dataset.unpay, true); return; }
+    const wk = t.closest("[data-week]"); if (wk) { S.week = parseYmd(wk.dataset.week); renderPayouts(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  });
+  document.addEventListener("change", (e) => { const s = e.target.closest("[data-assign]"); if (s && s.value) assignVideo(s.dataset.assign, s.value); });
+  $("#newCreator").onclick = () => editCreator(null);
+  $("#prevW").onclick = () => { S.week = new Date(S.week.getFullYear(), S.week.getMonth(), S.week.getDate() - 7); renderPayouts(); };
+  $("#nextW").onclick = () => { S.week = new Date(S.week.getFullYear(), S.week.getMonth(), S.week.getDate() + 7); renderPayouts(); };
+
   // ---------- playbook ----------
   function renderPlaybook() {
     $("#beats").innerHTML = BEATS.map((b) => `<li class="beat ${b.key ? "key" : ""}">
@@ -730,7 +976,7 @@
 
   // ---------- all ----------
   function renderAll() {
-    renderFilters(); renderMonth(); renderPaid(); renderDrawer(); renderLibrary();
+    renderFilters(); renderMonth(); renderPaid(); renderDrawer(); renderLibrary(); renderPayouts();
     $("#whoBtn").textContent = S.name ? `You: ${S.name}` : "";
   }
 
@@ -811,7 +1057,7 @@
     try {
       const d = await store.load();
       LS.set("skocal-name", S.name); LS.set("skocal-pass", S.pass);
-      S.entries = d.entries || []; S.campaigns = d.campaigns || []; S.synced = new Date(); S.failing = false;
+      S.entries = d.entries || []; S.campaigns = d.campaigns || []; S.creators = d.creators || []; S.payouts = d.payouts || []; S.synced = new Date(); S.failing = false;
       $("#gate").hidden = true; renderAll(); setSync(); startPolling();
     } catch (err) {
       $("#gateErr").hidden = false;
