@@ -1,7 +1,6 @@
 /* SKO Marketing Calendar. Shared team calendar: content, LIVEs, email, promos,
    and paid campaigns (launches and budget changes land on the calendar; what is
-   running now is listed under the month). Data lives behind the team passcode
-   at jackmorello.com/.netlify/functions/sko-cal. */
+   running now is listed under the month). Data lives at jackmorello.com/.netlify/functions/sko-cal. */
 (() => {
   "use strict";
 
@@ -128,7 +127,6 @@
     async load() {
       if (LOCAL) return { entries: [], campaigns: [], creators: [], payouts: [], ...LS.get("skocal-local", {}) };
       const r = await fetch(API, { headers: { "x-team-pass": S.pass }, cache: "no-store" });
-      if (r.status === 401) throw Object.assign(new Error("bad_pass"), { code: "bad_pass" });
       if (!r.ok) throw new Error("http " + r.status);
       return r.json();
     },
@@ -181,7 +179,6 @@
       S.synced = new Date(); S.failing = false;
       renderAll();
     } catch (e) {
-      if (e.code === "bad_pass") { LS.del("skocal-pass"); S.pass = ""; showGate("That passcode didn't work."); return; }
       S.failing = true;
     }
     setSync();
@@ -1034,7 +1031,7 @@
   $("#whoBtn").onclick = () => {
     openModal(`<form method="dialog"><div class="m-head"><h3 id="modalTitle">Your name</h3><button type="button" class="icon" data-x aria-label="Close">&times;</button></div>
       <div class="m-body"><label class="full">Shown on what you add and edit<input name="n" value="${esc(S.name)}" maxlength="40" required></label></div>
-      <div class="m-foot"><button type="button" class="link" data-out>Sign out on this device</button><div class="r"><button type="submit" class="btn">Save</button></div></div></form>`, (m) => {
+      <div class="m-foot"><button type="button" class="link" data-out>Forget me on this device</button><div class="r"><button type="submit" class="btn">Save</button></div></div></form>`, (m) => {
       m.querySelector("[data-x]").onclick = closeModal;
       m.querySelector("[data-out]").onclick = () => { LS.del("skocal-pass"); LS.del("skocal-name"); location.reload(); };
       m.querySelector("form").onsubmit = (e) => { e.preventDefault(); const v = e.target.elements.n.value.trim(); if (v) { S.name = v; LS.set("skocal-name", v); } closeModal(); renderAll(); };
@@ -1046,12 +1043,12 @@
     $("#gate").hidden = false;
     const f = $("#gateForm"); f.elements.name.value = S.name || "";
     $("#gateErr").hidden = !msg; $("#gateErr").textContent = msg || "";
-    (S.name ? f.elements.pass : f.elements.name).focus();
+    f.elements.name.focus();
   }
   $("#gateForm").onsubmit = async (e) => {
     e.preventDefault();
-    const f = e.target; S.name = f.elements.name.value.trim(); S.pass = f.elements.pass.value;
-    if (!S.name || !S.pass) return;
+    const f = e.target; S.name = f.elements.name.value.trim(); S.pass = "open";
+    if (!S.name) return;
     $("#gateErr").hidden = true;
     const btn = f.querySelector("button"); btn.disabled = true; btn.textContent = "Checking...";
     try {
@@ -1061,7 +1058,7 @@
       $("#gate").hidden = true; renderAll(); setSync(); startPolling();
     } catch (err) {
       $("#gateErr").hidden = false;
-      $("#gateErr").textContent = err.code === "bad_pass" ? "That passcode didn't work." : "Can't reach the server right now. Try again in a minute.";
+      $("#gateErr").textContent = "Can't reach the server right now. Try again in a minute.";
     } finally { btn.disabled = false; btn.textContent = "Open calendar"; }
   };
 
@@ -1081,6 +1078,6 @@
     b.textContent = "Demo: everything you add stays in this browser only. It's the reference build for the Lovable version.";
     document.body.prepend(b);
   }
-  if (!S.pass || !S.name) { showGate(); }
+  if (!S.name) { showGate(); }
   else { setSync(); refresh(); startPolling(); }
 })();
