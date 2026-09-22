@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>SKO Content Calendar — October 2026</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#173384; --pig:#0130C0; --frost:#88A9E3; --halo:#71A7F2;
+  --ink:#14182a; --mute:#5b6478; --rule:#dde3ef; --paper:#f4f6fb; --card:#fff;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:16px/1.55 "DM Sans",-apple-system,"Helvetica Neue",sans-serif}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+
+/* ---------- masthead ---------- */
+header{background:var(--navy);color:#fff;padding:44px 0 40px;margin-bottom:34px}
+header .wrap{padding-bottom:0}
+.kicker{font-family:"JetBrains Mono",monospace;font-size:11.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--frost);margin:0 0 14px}
+h1{font-size:clamp(30px,5.6vw,52px);line-height:1.04;letter-spacing:-.02em;margin:0 0 18px;font-weight:700}
+h1 em{font-style:italic;font-weight:400;color:var(--frost)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:14px;color:#cfdcf4;margin-top:22px}
+.meta b{color:#fff;font-weight:500}
+
+/* ---------- sections ---------- */
+section{margin:0 0 54px}
+h2{font-size:12px;font-family:"JetBrains Mono",monospace;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--pig);margin:0 0 6px;font-weight:500}
+h2 + .lede{font-size:clamp(20px,2.6vw,27px);line-height:1.25;letter-spacing:-.015em;
+  margin:0 0 22px;max-width:30ch;font-weight:500}
+p{margin:0 0 14px;max-width:72ch}
+p.sm{font-size:14.5px;color:var(--mute)}
+hr{border:0;border-top:1px solid var(--rule);margin:0 0 54px}
+
+/* ---------- the number ---------- */
+.math{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule)}
+.math div{background:var(--card);padding:18px 18px 16px}
+.math b{display:block;font-size:30px;line-height:1;letter-spacing:-.02em;color:var(--navy);margin-bottom:7px}
+.math span{display:block;font-size:13px;color:var(--mute)}
+
+/* ---------- supply table ---------- */
+table{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--card);
+  border:1px solid var(--rule)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mute);font-weight:500;background:#fafbfe;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n{font-family:"JetBrains Mono",monospace;white-space:nowrap}
+tfoot td{font-weight:700;background:#fafbfe;border-top:1px solid var(--navy)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- slot template ---------- */
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.slot{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--pig);padding:15px 16px}
+.slot .t{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--pig);
+  display:block;margin-bottom:6px}
+.slot b{display:block;font-size:16px;letter-spacing:-.01em;margin-bottom:5px}
+.slot p{margin:0;font-size:13.5px;color:var(--mute);max-width:none}
+.slot .src{display:block;margin-top:9px;font-size:12px;color:var(--navy)}
+
+/* ---------- month grid ---------- */
+.cal{background:var(--card);border:1px solid var(--rule)}
+.dows{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy);color:#fff}
+.dows span{padding:9px 10px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--rule)}
+.d{background:var(--card);min-height:104px;padding:8px 9px 10px;position:relative}
+.d.pad{background:#eef1f8}
+.d .num{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--navy);font-weight:500}
+.d .num i{font-style:normal;color:var(--mute);font-size:11px;margin-left:4px}
+.d .job{display:inline-block;margin-top:7px;font-family:"JetBrains Mono",monospace;font-size:9.5px;
+  letter-spacing:.09em;padding:2px 6px;color:#fff;background:var(--navy)}
+.d .job.shoot{background:var(--pig)}
+.d .job.edit{background:#5b6478}
+.d .job.bank{background:var(--frost);color:var(--navy)}
+.d .job.plan{background:var(--halo);color:#0a1740}
+.d .job.num{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.d .post{display:block;margin-top:7px;font-size:12px;color:var(--mute)}
+.d .live{display:block;margin-top:5px;font-size:11px;color:var(--pig)}
+.d.today{outline:2px solid var(--pig);outline-offset:-2px}
+.legend{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:14px;font-size:12.5px;color:var(--mute)}
+.legend i{font-style:normal;display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:baseline}
+
+/* ---------- roles / flow ---------- */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule)}
+.step{background:var(--card);padding:17px}
+.step .n{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.12em;color:var(--frost)}
+.step b{display:block;margin:6px 0 6px;font-size:16px}
+.step p{margin:0;font-size:13.5px;color:var(--mute);max-width:none}
+.step .who{display:block;margin-top:9px;font-size:12.5px;color:var(--navy);font-weight:500}
+
+.rule{background:var(--navy);color:#fff;padding:24px 26px;margin-top:20px}
+.rule .ex{font-family:"JetBrains Mono",monospace;font-size:clamp(13px,2.4vw,19px);color:#fff;
+  margin:14px 0 4px;word-break:break-word}
+.rule .ex b{color:var(--halo);font-weight:400}
+.rule p{color:#cfdcf4;max-width:66ch}
+.rule p:last-child{margin-bottom:0}
+
+.open li{margin-bottom:9px}
+.open b{color:var(--navy)}
+footer{border-top:1px solid var(--rule);padding-top:20px;font-size:13px;color:var(--mute)}
+
+@media (max-width:820px){
+  .wrap{padding:0 16px 72px}
+  header{padding:32px 0 28px}
+  .dows{display:none}
+  .days{grid-template-columns:1fr;gap:1px}
+  .d{min-height:0;display:grid;grid-template-columns:78px 1fr;gap:4px 12px;padding:11px 12px;align-items:start}
+  .d.pad{display:none}
+  .d .num{grid-row:1;grid-column:1}
+  .d .job{grid-row:1;grid-column:2;margin-top:0;justify-self:start}
+  .d .post,.d .live{grid-column:2;margin-top:2px}
+}
+@media print{
+  body{background:#fff}
+  header{padding:22px 0}
+  .scroll{overflow:visible}
+  section{break-inside:avoid}
+}
+</style>
+
+<header>
+  <div class="wrap">
+    <p class="kicker">SKO Compounds · Content · Owner: Jack</p>
+    <h1>Content calendar<br><em>October 2026</em></h1>
+    <div class="meta">
+      <span><b>8 posts a day minimum</b> on the company TikTok</span>
+      <span><b>2 shoot days</b> a week</span>
+      <span>Published <b>22 Sep 2026</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2>The number</h2>
+  <p class="lede">Eight a day is 248 posts in October. That only works if shooting and cutting are scheduled, not improvised.</p>
+  <div class="math">
+    <div><b>8</b><span>posts per day, minimum</span></div>
+    <div><b>56</b><span>per week</span></div>
+    <div><b>248</b><span>October total</span></div>
+    <div><b>58</b><span>cuts a week the pipeline below actually produces</span></div>
+  </div>
+  <p class="sm" style="margin-top:14px">Two margins of error in that last number: a shoot day that gets rained out, or an editor out sick, and the week is short. That is why Sat/Sun post from the bank and never from that week's footage.</p>
+</section>
+
+<hr>
+
+<section>
+  <h2>Where 56 a week comes from</h2>
+  <p class="lede">Every slot has a named source. Nothing in the calendar is "someone will make something."</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Source</th><th>When it's shot</th><th>Raw in</th><th>Cuts out</th><th>Who</th></tr></thead>
+    <tbody>
+      <tr><td>Street interviews — 2 locations</td><td>Mon + Thu</td><td class="n">~40 min each</td><td class="n">30</td><td>Noah films · Erica + Xerky cut</td></tr>
+      <tr><td>Warehouse — silent, captions only</td><td>Tue</td><td class="n">~20 min</td><td class="n">10</td><td>Noah films · Xerky cuts</td></tr>
+      <tr><td>CEO / product to camera</td><td>Fri, batched</td><td class="n">8 takes</td><td class="n">8</td><td>Billy on camera · Erica cuts</td></tr>
+      <tr><td>Creator / UGC delivered</td><td>Rolling</td><td class="n">—</td><td class="n">4</td><td>Creators · Lance checks</td></tr>
+      <tr><td>Re-cuts of winners + clipped verticals</td><td>Any day</td><td class="n">—</td><td class="n">6</td><td>Clip bay · Jack approves</td></tr>
+    </tbody>
+    <tfoot><tr><td>Weekly supply</td><td></td><td></td><td class="n">58</td><td>against 56 needed</td></tr></tfoot>
+  </table>
+  </div>
+  <p class="sm" style="margin-top:14px">The street number is not a guess: the clip bay pulled 28 candidate moments out of one 6½-minute conversation, and the 18 Sep shoot is 48 files sitting in Drive unused. A 40-minute session reliably yields 15 cuts worth posting.</p>
+</section>
+
+<hr>
+
+<section>
+  <h2>The day</h2>
+  <p class="lede">Eight slots, same order every day, so nobody has to decide what goes up at 2pm.</p>
+  <div class="slots">
+    <div class="slot"><span class="t">08:00</span><b>Street hook</b><p>The approach and the first reaction. Cold open on the question, no logo for three seconds.</p><span class="src">Source: Mon/Thu street</span></div>
+    <div class="slot"><span class="t">10:00</span><b>Warehouse</b><p>Silent, captions only. Vials down the line, labels going on, boxes closing. Beverly Hills on screen once.</p><span class="src">Source: Tue warehouse</span></div>
+    <div class="slot"><span class="t">11:30</span><b>CEO / product</b><p>One compound, one plain claim, talking to camera. Third-party tested is the only testing language.</p><span class="src">Source: Fri batch</span></div>
+    <div class="slot"><span class="t">13:00</span><b>Funny</b><p>The rejection, the mishear, the deadpan. Real reactions only — nothing written to be funny.</p><span class="src">Source: street offcuts</span></div>
+    <div class="slot"><span class="t">15:00</span><b>Street stake</b><p>Money on the table: the $100, the mystery box. The stake is said out loud in the first two seconds.</p><span class="src">Source: Mon/Thu street</span></div>
+    <div class="slot"><span class="t">17:00</span><b>LIVE promo</b><p>Cut from the last LIVE, ends on when the next one is. This is the slot paid spend supports.</p><span class="src">Source: yesterday's LIVE</span></div>
+    <div class="slot"><span class="t">19:00</span><b>Creator / UGC</b><p>A creator's own delivery, their face, their words. Tagged so payouts can find it.</p><span class="src">Source: creators</span></div>
+    <div class="slot"><span class="t">21:00</span><b>Re-cut</b><p>A winner from the last 30 days with a new hook, or a clipped vertical from the verticals we follow.</p><span class="src">Source: clip bay</span></div>
+  </div>
+  <p class="sm" style="margin-top:16px">Anything above eight goes up as a ninth and tenth in the same order — hook first, re-cut last. IG Reels and YT Shorts get the same files with no re-edit; that decision is per-week, not per-post.</p>
+</section>
+
+<hr>
+
+<section>
+  <h2>October</h2>
+  <p class="lede">Shoot, edit, post, plan. The LIVE row is empty on purpose.</p>
+  <div class="cal">
+    <div class="dows"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+    <div class="days" id="days"></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--pig)"></i>Shoot day</span>
+    <span><i style="background:#5b6478"></i>Edit due</span>
+    <span><i style="background:var(--frost)"></i>Posting from the bank</span>
+    <span><i style="background:#fff;box-shadow:inset 0 0 0 1px var(--navy)"></i>Last week's numbers</span>
+    <span><i style="background:var(--halo)"></i>Plan next week</span>
+    <span>Every day posts 8. LIVE times to be confirmed.</span>
+  </div>
+  <p class="sm" style="margin-top:14px">Rest of September runs the same shape from Tue 22 Sep, starting with the 18 Sep footage already in Drive.</p>
+</section>
+
+<hr>
+
+<section>
+  <h2>How a file moves</h2>
+  <p class="lede">Four steps, one owner each. If a file is stuck, it is stuck at a person, not in a folder.</p>
+  <div class="flow">
+    <div class="step"><span class="n">01 · SHOOT</span><b>Raw into Drive</b><p>Uploaded the same day it's shot, named correctly at upload. Unnamed files are not intake.</p><span class="who">Noah, Roman</span></div>
+    <div class="step"><span class="n">02 · ASSIGN</span><b>Handed to an editor</b><p>Named in the content channel: which files, which editor, due date. Within 24 hours of upload.</p><span class="who">Lance</span></div>
+    <div class="step"><span class="n">03 · EDIT</span><b>Re-uploaded as _EDITED</b><p>Same folder, same name, status changed. Never a new folder, never a new name.</p><span class="who">Erica, Xerky</span></div>
+    <div class="step"><span class="n">04 · APPROVE</span><b>_FINAL and scheduled</b><p>Posted in the content channel as final, then it enters a slot on this calendar.</p><span class="who">Jack</span></div>
+  </div>
+  <div class="rule">
+    <p style="margin-bottom:0"><b style="color:#fff">Every file, every folder, no exceptions:</b></p>
+    <p class="ex"><b>(subject)</b>_<b>(hook)</b>_<b>(format)</b>_<b>(seconds)</b>_<b>(status)</b></p>
+    <p class="mono" style="font-size:14px;color:#fff;margin:0 0 14px">AousePOD_noticed_9x16_10s_FINAL</p>
+    <p>Status is one of RAW, EDITED, FINAL. It is the only part of the name that changes, and it changes in place — the file keeps its name through the whole pipeline so anyone can find it at any stage.</p>
+    <p>A twice-weekly touch base in the content channel: how many files are waiting on approval, and how many slots next week are still unfilled. Anyone can post it. Nobody waits to be asked.</p>
+  </div>
+</section>
+
+<hr>
+
+<section class="open">
+  <h2>Not decided yet</h2>
+  <p class="lede">Four things this calendar is waiting on. Each one has an owner.</p>
+  <ul>
+    <li><b>LIVE days and times — Billy.</b> Every 17:00 slot promotes a LIVE, and paid spend points at it. Until the schedule is fixed, that slot runs a generic "we go live" cut, which is the weakest version of it.</li>
+    <li><b>Clipping accounts — Billy.</b> GYMRATCUTS, LOOKSMAXGEMS and BIOHACKDEPT are claimed on TikTok and dark. Billy is posting the first ones himself; once that's tested, each one takes 3 a day off the same supply and the weekly number has to go up.</li>
+    <li><b>Creator pay — Jack and Billy.</b> Two policies in circulation: 5% of every attributed sale, or $100 flat plus 15% affiliate. Creators can't be briefed for October until it's one number.</li>
+    <li><b>IG and YouTube — Jack.</b> The same cuts cost nothing extra to post there. It's a per-week decision, and right now the answer is TikTok first.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>SKO Compounds content calendar · October 2026 · maintained by Jack · this page is the plan, the app at
+  <span class="mono">jack-more.github.io/sko-calendar</span> is where entries and files live.</p>
+</footer>
+</div>
+
+<script>
+// October 2026 starts on a Thursday. Mon-first grid, so three pad cells lead.
+const JOBS = {
+  1:['shoot','SHOOT'], 2:['edit','CEO BATCH'], 3:['bank','BANK'], 4:['plan','PLAN WK'],
+  5:['shoot','SHOOT'], 6:['edit','WAREHOUSE'], 7:['num','NUMBERS'], 8:['shoot','SHOOT'], 9:['edit','CEO BATCH'],
+  10:['bank','BANK'], 11:['plan','PLAN WK'], 12:['shoot','SHOOT'], 13:['edit','WAREHOUSE'], 14:['num','NUMBERS'],
+  15:['shoot','SHOOT'], 16:['edit','CEO BATCH'], 17:['bank','BANK'], 18:['plan','PLAN WK'],
+  19:['shoot','SHOOT'], 20:['edit','WAREHOUSE'], 21:['num','NUMBERS'], 22:['shoot','SHOOT'], 23:['edit','CEO BATCH'],
+  24:['bank','BANK'], 25:['plan','PLAN WK'], 26:['shoot','SHOOT'], 27:['edit','WAREHOUSE'], 28:['num','NUMBERS'],
+  29:['shoot','SHOOT'], 30:['edit','CEO BATCH'], 31:['bank','BANK'],
+};
+const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const days = document.getElementById('days');
+let html = '';
+for (let i = 0; i < 3; i++) html += '<div class="d pad"></div>';
+for (let n = 1; n <= 31; n++) {
+  const dow = DOW[(new Date(2026, 9, n).getDay() + 6) % 7];
+  const [cls, label] = JOBS[n] || ['', ''];
+  html += `<div class="d">
+    <span class="num">${n}<i>${dow}</i></span>
+    ${label ? `<span class="job ${cls}">${label}</span>` : ''}
+    <span class="post">8 posts · TT</span>
+    <span class="live">LIVE · time TBC</span>
+  </div>`;
+}
+days.innerHTML = html;
+</script>
+</html>
